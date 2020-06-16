@@ -16,10 +16,6 @@ log_cache:
   crt: #@ data.values.log_cache.crt
   key: #@ data.values.log_cache.key
 
-log_cache_metrics:
-  crt: #@ data.values.log_cache_metrics.crt
-  key: #@ data.values.log_cache_metrics.key
-
 log_cache_gateway:
   crt: #@ data.values.log_cache_gateway.crt
   key: #@ data.values.log_cache_gateway.key
