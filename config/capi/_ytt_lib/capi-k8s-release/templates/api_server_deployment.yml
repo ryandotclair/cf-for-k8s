@@ -8,7 +8,7 @@ metadata:
   name: cf-api-server
   namespace: #@ data.values.system_namespace
 spec:
-  replicas: 20
+  replicas: 10
   strategy:
     rollingUpdate:
       maxSurge: 0
