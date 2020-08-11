@@ -1,0 +1,193 @@
+groups:
+- name: buildpacks
+  jobs:
+    - bump-buildpacks
+
+resource_types:
+resources:
+- name: ruby-buildpack
+  type: docker-image
+  source:
+    repository: gcr.io/paketo-community/ruby
+
+- name: python-buildpack
+  type: docker-image
+  source:
+    repository: gcr.io/paketo-community/python
+
+- name: java-buildpack
+  type: docker-image
+  source:
+    repository: gcr.io/paketo-buildpacks/java
+
+- name: nodejs-buildpack
+  type: docker-image
+  source:
+    repository: gcr.io/paketo-buildpacks/nodejs
+
+- name: go-buildpack
+  type: docker-image
+  source:
+    repository: gcr.io/paketo-buildpacks/go
+
+- name: dotnet-core-buildpack
+  type: docker-image
+  source:
+    repository: gcr.io/paketo-buildpacks/dotnet-core
+
+- name: php-buildpack
+  type: docker-image
+  source:
+    repository: gcr.io/paketo-buildpacks/php
+
+- name: procfile-buildpack
+  type: docker-image
+  source:
+    repository: gcr.io/paketo-buildpacks/procfile
+
+- name: cf-for-k8s-develop
+  type: git
+  icon: github
+  source:
+    branch: develop
+    uri: git@github.com:cloudfoundry/cf-for-k8s
+    private_key: ((cf_for_k8s_readwrite_deploy_key.private_key))
+    ignore_paths:
+    - ci/**
+
+- name: cf-for-k8s-ci
+  type: git
+  icon: github
+  source:
+    branch: develop
+    uri: git@github.com:cloudfoundry/cf-for-k8s
+    private_key: ((cf_for_k8s_readonly_deploy_key.private_key))
+    paths:
+    - ci/**
+
+- name: ready-pool
+  type: pool
+  icon: pool
+  source:
+    uri: git@github.com:cloudfoundry/relint-ci-pools
+    branch: master
+    pool: k8s-dev/ready
+    private_key: ((relint_ci_pools_readwrite_deploy_key.private_key))
+- name: destroy-pool
+  type: pool
+  icon: pool
+  source:
+    uri: git@github.com:cloudfoundry/relint-ci-pools
+    branch: master
+    pool: k8s-dev/destroy
+    private_key: ((relint_ci_pools_readwrite_deploy_key.private_key))
+
+jobs:
+- name: bump-buildpacks
+  public: true
+  plan:
+  - in_parallel:
+    - get: ruby-buildpack
+      trigger: true
+    - get: python-buildpack
+      trigger: true
+    - get: java-buildpack
+      trigger: true
+    - get: nodejs-buildpack
+      trigger: true
+    - get: go-buildpack
+      trigger: true
+    - get: dotnet-core-buildpack
+      trigger: true
+    - get: php-buildpack
+      trigger: true
+    - get: procfile-buildpack
+      trigger: true
+    - get: cf-for-k8s-ci
+    - get: cf-for-k8s-develop
+    - put: pool-lock
+      resource: ready-pool
+      params:
+        acquire: true
+
+  - task: bump-cf-for-k8s
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: relintdockerhubpushbot/cf-for-k8s-ci
+      inputs:
+        - name: ruby-buildpack
+        - name: python-buildpack
+        - name: java-buildpack
+        - name: nodejs-buildpack
+        - name: go-buildpack
+        - name: dotnet-core-buildpack
+        - name: php-buildpack
+        - name: procfile-buildpack
+        - name: cf-for-k8s-develop
+      outputs:
+        - name: cf-for-k8s-bumped
+      run:
+        path: /bin/bash
+        args:
+          - -ec
+          - |
+            RUBY_SHA=`cat ruby-buildpack/digest`
+            PYTHON_SHA=`cat python-buildpack/digest`
+            JAVA_SHA=`cat java-buildpack/digest`
+            NODEJS_SHA=`cat nodejs-buildpack/digest`
+            GO_SHA=`cat go-buildpack/digest`
+            DOTNETCORE_SHA=`cat dotnet-core-buildpack/digest`
+            PHP_SHA=`cat php-buildpack/digest`
+            PROCFILE_SHA=`cat procfile-buildpack/digest`
+
+            pushd cf-for-k8s-develop
+              sed -i "s|^  - image: gcr.io/paketo-community/ruby@.*$|  - image: gcr.io/paketo-community/ruby@${RUBY_SHA}| w /dev/stdout" config/kpack/default-buildpacks.yml
+              sed -i "s|^  - image: gcr.io/paketo-community/python@.*$|  - image: gcr.io/paketo-community/python@${PYTHON_SHA}| w /dev/stdout" config/kpack/default-buildpacks.yml
+              sed -i "s|^  - image: gcr.io/paketo-buildpacks/java@.*$|  - image: gcr.io/paketo-buildpacks/java@${JAVA_SHA}| w /dev/stdout" config/kpack/default-buildpacks.yml
+              sed -i "s|^  - image: gcr.io/paketo-buildpacks/nodejs@.*$|  - image: gcr.io/paketo-buildpacks/nodejs@${NODEJS_SHA}| w /dev/stdout" config/kpack/default-buildpacks.yml
+              sed -i "s|^  - image: gcr.io/paketo-buildpacks/go@.*$|  - image: gcr.io/paketo-buildpacks/go@${GO_SHA}| w /dev/stdout" config/kpack/default-buildpacks.yml
+              sed -i "s|^  - image: gcr.io/paketo-buildpacks/dotnet-core@.*$|  - image: gcr.io/paketo-buildpacks/dotnet-core@${DOTNETCORE_SHA}| w /dev/stdout" config/kpack/default-buildpacks.yml
+              sed -i "s|^  - image: gcr.io/paketo-buildpacks/php@.*$|  - image: gcr.io/paketo-buildpacks/php@${PHP_SHA}| w /dev/stdout" config/kpack/default-buildpacks.yml
+              sed -i "s|^  - image: gcr.io/paketo-buildpacks/procfile@.*$|  - image: gcr.io/paketo-buildpacks/procfile@${PROCFILE_SHA}| w /dev/stdout" config/kpack/default-buildpacks.yml
+              git config user.email "cf-release-integration@pivotal.io"
+              git config user.name "relint-ci"
+              git add .
+
+              git diff-index --quiet HEAD || git commit -m "Autobump buildpacks"
+            popd
+            mkdir -p cf-for-k8s-bumped
+            cp -R cf-for-k8s-develop/. cf-for-k8s-bumped/
+
+  - task: validate-buildpacks
+    file: cf-for-k8s-ci/ci/tasks/install-cf-on-gke/task.yml
+    input_mapping:
+      cf-for-k8s: cf-for-k8s-bumped
+      pool-lock: pool-lock
+    params:
+      GCP_SERVICE_ACCOUNT_JSON: ((ci_k8s_gcp_service_account_json))
+      GCP_PROJECT_NAME: ((ci_k8s_gcp_project_name))
+      GCP_PROJECT_ZONE: ((ci_k8s_gcp_project_zone))
+
+  - task: run-smoke-tests
+    file: cf-for-k8s-ci/ci/tasks/run-smoke-tests/task.yml
+    params:
+      SMOKE_TEST_SKIP_SSL: false
+    input_mapping:
+      cf-for-k8s: cf-for-k8s-bumped
+
+  - put: cf-for-k8s-develop
+    params:
+      repository: cf-for-k8s-bumped
+      rebase: true
+
+  ensure:
+    do:
+      - put: destroy-pool
+        params:
+          add: pool-lock
+      - put: ready-pool
+        params:
+          remove: pool-lock

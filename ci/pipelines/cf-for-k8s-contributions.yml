@@ -98,6 +98,11 @@ resource_types:
   source:
     repository: ljfranklin/terraform-resource
 resources:
+- name: ruby-buildpack
+  type: docker-image
+  source:
+    repository: gcr.io/paketo-community/ruby
+
 - name: cf-for-k8s-develop
   type: git
   icon: github
@@ -249,6 +254,25 @@ resources:
       bucket: relint-k8s-cluster-state
       credentials: ((dev_cluster_pool_gcs_admin_service_account_json))
 jobs:
+- name: bump-buildpacks
+  public: true
+  plan:
+  - get: ruby-buildpack
+    trigger: true
+  - task: create-tf-vars-file
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: relintdockerhubpushbot/cf-for-k8s-ci
+      run:
+        path: /bin/bash
+        args:
+          - -ec
+          - |
+            sleep 3600
+
 - name: fail-prs-to-cf-for-k8s-master
   public: true
   plan:
