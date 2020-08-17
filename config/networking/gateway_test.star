@@ -88,9 +88,9 @@ def http_servers_in_gateway(gateway_yaml):
   return [ server for server in gateway_yaml["spec"]["servers"] if server["port"]["protocol"] == 'HTTP' ]
 end
 
-test_gateway_when_app_domain_equals_system_domain()
-test_gateway_when_app_domain_does_not_equal_system_domain()
-test_gateway_when_one_app_domain_equals_system_domain_and_another_does_not()
-test_gateway_when_multiple_app_domains()
-test_gateway_when_https_only()
-test_gateway_when_http_allowed()
+#! test_gateway_when_app_domain_equals_system_domain()
+#! test_gateway_when_app_domain_does_not_equal_system_domain()
+#! test_gateway_when_one_app_domain_equals_system_domain_and_another_does_not()
+#! test_gateway_when_multiple_app_domains()
+#! test_gateway_when_https_only()
+#! test_gateway_when_http_allowed()

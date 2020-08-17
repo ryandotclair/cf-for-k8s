@@ -19,7 +19,7 @@ data:
   #@overlay/replace via=lambda a,_: json.encode(overlay.apply(yaml.decode(a),replace_jwt_policy()))
   values:
 
-#@overlay/match by=overlay.subset({"kind":"DaemonSet","metadata":{"name":"istio-ingressgateway"}})
+#@overlay/match by=overlay.subset({"kind":"Deployment","metadata":{"name":"istio-ingressgateway"}})
 ---
 spec:
   template:
