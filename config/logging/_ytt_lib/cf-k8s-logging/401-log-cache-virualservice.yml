@@ -7,7 +7,7 @@ metadata:
   namespace: #@ data.values.system_namespace
 spec:
   gateways:
-  - cf-system/istio-ingressgateway
+  - cf-system/istio-system-ingressgateway
   hosts:
   - #@ "log-cache.{}".format(data.values.system_domain)
   http:

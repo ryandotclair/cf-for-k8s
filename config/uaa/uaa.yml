@@ -225,7 +225,7 @@ spec:
   - #@ "login." + data.values.system_domain
   - #@ "*.login." + data.values.system_domain
   gateways:
-  - #@ data.values.system_namespace + "/istio-ingressgateway"
+  - #@ data.values.system_namespace + "/istio-system-ingressgateway"
   http:
   - route:
     - destination:
