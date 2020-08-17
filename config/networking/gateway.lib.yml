@@ -1,13 +1,13 @@
-#@ def gateway(system_domain, app_domains, system_namespace, workloads_namespace, https_only, system, gateway_selector):
+#@ def gateway(system_domain, app_domains, system_namespace, workloads_namespace, https_only, system, name):
 
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: istio-ingressgateway
+  name: #@ name
   namespace: #@ system_namespace
 spec:
   selector:
-    istio: #@ gateway_selector
+    istio: #@ name
   servers:
   - hosts:
     #! TODO: restrict this
