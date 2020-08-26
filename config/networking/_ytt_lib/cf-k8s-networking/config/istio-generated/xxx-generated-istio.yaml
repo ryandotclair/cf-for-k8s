@@ -9297,7 +9297,16 @@ spec:
           value: sni-dnat
         - name: ISTIO_META_CLUSTER_ID
           value: Kubernetes
+        - name: TERMINATION_DRAIN_DURATION_SECONDS
+          value: "60"
         image: index.docker.io/istio/proxyv2@sha256:1d3a72f72814d9895cd6dbd450d6badefb353fe99f3f4a8860ec4968136c04e0
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - sleep 20
         name: istio-proxy
         ports:
         - containerPort: 15021
@@ -9349,6 +9358,7 @@ spec:
           name: ingressgateway-ca-certs
           readOnly: true
       serviceAccountName: istio-ingressgateway-service-account
+      terminationGracePeriodSeconds: 80
       volumes:
       - configMap:
           name: istio-ca-root-cert
