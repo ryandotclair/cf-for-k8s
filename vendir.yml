@@ -23,7 +23,6 @@ directories:
     - config/crd/**/*
     - config/istio-generated/**/*
     - config/istio-config/**/*
-    - config/istio/generated/**/*
     - config/routecontroller/**/*
 - path: config/logging/_ytt_lib/cf-k8s-logging
   contents:
