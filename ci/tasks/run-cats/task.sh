@@ -1,12 +1,12 @@
 #!/bin/bash
 set -eu
 
-DIR=$(pwd)
+CONFIG_DIR="$(pwd)/config"
+mkdir -p ${CONFIG_DIR}
+CATS_CONFIG_FILE="${CONFIG_DIR}/cats_config.json"
 
 DNS_DOMAIN=$(cat env-metadata/dns-domain.txt)
 CF_ADMIN_PASSWORD="$(cat env-metadata/cf-admin-password.txt)"
-
-mkdir "${DIR}/config"
 
 set +x
 echo '{}' | jq \
@@ -22,20 +22,20 @@ echo '{}' | jq \
   "default_timeout": 180,
   "skip_ssl_validation": true,
   "timeout_scale": 1,
-  "include_apps": true,
-  "include_backend_compatibility": false,
-  "include_deployments": false,
-  "include_detect": false,
-  "include_docker": false,
-  "include_internet_dependent": false,
-  "include_private_docker_registry": false,
-  "include_route_services": false,
-  "include_routing": false,
-  "include_service_discovery": false,
-  "include_service_instance_sharing": false,
-  "include_services": false,
-  "include_tasks": false,
-  "include_v3": false,
+  "include_apps": ${INCLUDE_APPS},
+  "include_backend_compatibility": ${INCLUDE_BACKEND_COMPATABILITY},
+  "include_deployments": ${INCLUDE_DEPLOYMENTS},
+  "include_detect": ${INCLUDE_DETECT},
+  "include_docker": ${INCLUDE_DOCKER},
+  "include_internet_dependent": ${INCLUDE_INTERNET_DEPENDENT},
+  "include_private_docker_registry": ${INCLUDE_DOCKER_REGISTRY},
+  "include_route_services": ${INCLUDE_ROUTE_SERVICES},
+  "include_routing": ${INCLUDE_ROUTING},
+  "include_service_discovery": ${INCLUDE_SERVICE_DISCOVERY},
+  "include_service_instance_sharing": ${INCLUDE_SERVICE_INSTANCE_SHARING},
+  "include_services": ${INCLUDE_SERVICES},
+  "include_tasks": ${INCLUDE_TASKS},
+  "include_v3": ${INCLUDE_V3},
   "infrastructure": "kubernetes",
   "ruby_buildpack_name": "paketo-community/ruby",
   "python_buildpack_name": "paketo-community/python",
@@ -44,17 +44,17 @@ echo '{}' | jq \
   "nodejs_buildpack_name": "paketo-buildpacks/nodejs",
   "php_buildpack_name": "paketo-buildpacks/php",
   "binary_buildpack_name": "paketo-buildpacks/procfile"
-}' > "${DIR}/config/cats_config.json"
+}' > "${CATS_CONFIG_FILE}"
 # `cf_push_timeout` and `default_timeout` are set fairly arbitrarily
 
 set -x
 pushd cf-acceptance-tests
-  export CONFIG="${DIR}/config/cats_config.json"
+  export CONFIG="${CATS_CONFIG_FILE}"
   ./bin/test \
     -keepGoing \
     -randomizeAllSpecs \
-    -flakeAttempts=2 \
-    -nodes=6
+    -flakeAttempts=${NUM_FLAKE_ATTEMPTS} \
+    -nodes=${NUM_NODES}
   # As of 2020-08-02, we're seeing CATS failures when using >6 nodes
   # CATS run time looks like
   # nodes | run time
