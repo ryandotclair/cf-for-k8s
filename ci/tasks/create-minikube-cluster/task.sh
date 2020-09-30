@@ -32,11 +32,6 @@ minikube start
 EOT
 chmod +x remote-create-minikube-cluster.sh
 
-echo "Uploading minikube cluster.yml..."
-gcloud beta compute \
-  scp cf-for-k8s/deploy/minikube/cluster.yml ${user_host}:/tmp/minikube/cluster.yml \
-  --zone "us-central1-a" > /dev/null
-
 echo "Uploading remote-create-minikube-cluster.sh..."
 gcloud beta compute \
   scp remote-create-minikube-cluster.sh ${user_host}:/tmp/ \
