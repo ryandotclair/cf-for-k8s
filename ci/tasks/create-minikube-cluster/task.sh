@@ -28,7 +28,7 @@ set -euo pipefail
 
 export HOME=/tmp/minikube
 export PATH=/tmp/minikube/bin:/tmp/minikube/go/bin:$PATH
-minikube start
+minikube start --cpus=6 --memory=6g --driver=virtualbox
 EOT
 chmod +x remote-create-minikube-cluster.sh
 

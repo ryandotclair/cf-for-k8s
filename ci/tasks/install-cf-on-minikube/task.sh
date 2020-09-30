@@ -36,7 +36,7 @@ cat <<EOT > remote-install-cf.sh
 set -euo pipefail
 
 export HOME=/tmp/minikube
-export PATH=/tmp/minikube/bin:/tmp/minikube/go/bin:$PATH
+export PATH="/tmp/minikube/bin:/tmp/minikube/go/bin:\$PATH"
 
 CF_VALUES=/tmp/cf-install-values.yml
 CF_RENDERED=/tmp/cf-rendered.yml
@@ -44,8 +44,8 @@ cd /tmp/minikube/cf-for-k8s
 ytt -f config -f ci/tasks/install-cf-on-minikube/only-nodejs-builder-overlay.yml -f \$CF_VALUES > \$CF_RENDERED
 
 #TMP
-echo $PATH
-eval '$(minikube docker-env)'
+echo \$PATH
+eval "\$(minikube docker-env)"
 kapp deploy -f \$CF_RENDERED -a cf -y
 EOT
 
