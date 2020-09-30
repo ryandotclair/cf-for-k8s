@@ -19,4 +19,4 @@ params:
   VERSION_SELECTOR: ~
 
 run:
-  path: cf-for-k8s-ci/ci/tasks/create-kind-cluster/task.sh
+  path: cf-for-k8s-ci/ci/tasks/create-minikube-cluster/task.sh
