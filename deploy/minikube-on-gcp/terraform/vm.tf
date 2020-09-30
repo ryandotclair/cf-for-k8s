@@ -94,8 +94,8 @@ EOF
   jq --version
 
   echo "Installing virtualbox..."
-  apt-get update
-  apt-get install virtualbox
+  sudo apt-get update
+  sudo apt-get install -y virtualbox
 
   echo "Installing minikube..."
   retry 5 curl -Lo ./minikube "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"
