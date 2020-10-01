@@ -21,7 +21,7 @@ echo "Generating install values..."
 echo "Running fetch-minikube-ip.sh..."
 MINIKUBE_IP=$(gcloud beta compute \
   ssh ${user_host} \
-  --command "/tmp/remote-install-cf.sh" \
+  --command "/tmp/fetch-minikube-ip.sh" \
   --zone "us-central1-a" | tail -n 1)
 
 DNS_DOMAIN="${MINIKUBE_IP}.nip.io"
