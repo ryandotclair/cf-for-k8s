@@ -6,14 +6,10 @@ source cf-for-k8s-ci/ci/helpers/auth-to-gcp.sh
 echo "Generating install values..."
 cf-for-k8s/hack/generate-values.sh -d vcap.me -g gcp-service-account.json > cf-install-values/cf-install-values.yml
 cat <<EOT >> cf-install-values/cf-install-values.yml
-add_metrics_server_components: true
 enable_automount_service_account_token: true
-metrics_server_prefer_internal_kubelet_address: true
 remove_resource_requirements: true
 use_first_party_jwt_tokens: true
 
-load_balancer:
-  enable: false
 EOT
 
 echo "Uploading cf-for-k8s repo..."
@@ -41,7 +37,7 @@ export PATH="/tmp/minikube/bin:/tmp/minikube/go/bin:\$PATH"
 CF_VALUES=/tmp/cf-install-values.yml
 CF_RENDERED=/tmp/cf-rendered.yml
 cd /tmp/minikube/cf-for-k8s
-ytt -f config -f ci/tasks/install-cf-on-minikube/only-nodejs-builder-overlay.yml -f \$CF_VALUES > \$CF_RENDERED
+ytt -f config -f \$CF_VALUES > \$CF_RENDERED
 
 eval "\$(minikube docker-env)"
 kapp deploy -f \$CF_RENDERED -a cf -y
@@ -53,6 +49,8 @@ echo "Uploading remote-install-cf.sh..."
 gcloud beta compute \
   scp remote-install-cf.sh ${user_host}:/tmp \
   --zone "us-central1-a" > /dev/null
+
+sleep 100000
 
 echo "Running remote-install-cf.sh..."
 gcloud beta compute \
