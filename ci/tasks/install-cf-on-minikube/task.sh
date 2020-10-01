@@ -4,7 +4,10 @@ set -eou pipefail
 source cf-for-k8s-ci/ci/helpers/auth-to-gcp.sh
 
 echo "Generating install values..."
-cf-for-k8s/hack/generate-values.sh -d vcap.me -g gcp-service-account.json > cf-install-values/cf-install-values.yml
+# PARSE IP FROM MINIKUBE
+DNS_DOMAIN="$(minikube ip).nip.io"
+
+cf-for-k8s/hack/generate-values.sh -d ${DNS_DOMAIN} -g gcp-service-account.json > cf-install-values/cf-install-values.yml
 cat <<EOT >> cf-install-values/cf-install-values.yml
 enable_automount_service_account_token: true
 remove_resource_requirements: true
@@ -39,6 +42,9 @@ CF_RENDERED=/tmp/cf-rendered.yml
 cd /tmp/minikube/cf-for-k8s
 ytt -f config -f \$CF_VALUES > \$CF_RENDERED
 
+
+sleep 100000
+
 eval "\$(minikube docker-env)"
 kapp deploy -f \$CF_RENDERED -a cf -y
 EOT
@@ -49,8 +55,6 @@ echo "Uploading remote-install-cf.sh..."
 gcloud beta compute \
   scp remote-install-cf.sh ${user_host}:/tmp \
   --zone "us-central1-a" > /dev/null
-
-sleep 100000
 
 echo "Running remote-install-cf.sh..."
 gcloud beta compute \
