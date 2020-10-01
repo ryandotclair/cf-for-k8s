@@ -3,10 +3,28 @@ set -eou pipefail
 
 source cf-for-k8s-ci/ci/helpers/auth-to-gcp.sh
 
-echo "Generating install values..."
-# PARSE IP FROM MINIKUBE
-DNS_DOMAIN="$(minikube ip).nip.io"
+echo "Fetching minikube ip"
+cat <<EOT >> fetch-minikube-ip.sh
+export HOME=/tmp/minikube
+export PATH="/tmp/minikube/bin:/tmp/minikube/go/bin:\$PATH"
+minikube ip
+EOT
 
+chmod +x fetch-minikube-ip.sh
+
+echo "Uploading fetch-minikube-ip.sh..."
+gcloud beta compute \
+  scp fetch-minikube-ip.sh ${user_host}:/tmp \
+  --zone "us-central1-a" > /dev/null
+echo "Generating install values..."
+
+echo "Running fetch-minikube-ip.sh..."
+MINIKUBE_IP=$(gcloud beta compute \
+  ssh ${user_host} \
+  --command "/tmp/remote-install-cf.sh" \
+  --zone "us-central1-a" | tail -n 1)
+
+DNS_DOMAIN="${MINIKUBE_IP}.nip.io"
 cf-for-k8s/hack/generate-values.sh -d ${DNS_DOMAIN} -g gcp-service-account.json > cf-install-values/cf-install-values.yml
 cat <<EOT >> cf-install-values/cf-install-values.yml
 enable_automount_service_account_token: true
