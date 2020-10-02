@@ -2,7 +2,6 @@
 set -eou pipefail
 
 source cf-for-k8s-ci/ci/helpers/auth-to-gcp.sh
-user_host="root@${vm_name}"
 
 cat <<EOT > remote-check-permissions.sh
 while [[ ! -w /tmp/minikube ]]; do
