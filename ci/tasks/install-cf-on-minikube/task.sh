@@ -2,6 +2,7 @@
 set -eou pipefail
 
 source cf-for-k8s-ci/ci/helpers/auth-to-gcp.sh
+user_host="root@${vm_name}"
 
 echo "Fetching minikube ip"
 cat <<EOT >> fetch-minikube-ip.sh
@@ -60,10 +61,8 @@ CF_RENDERED=/tmp/cf-rendered.yml
 cd /tmp/minikube/cf-for-k8s
 ytt -f config -f \$CF_VALUES > \$CF_RENDERED
 
-
 sleep 100000
-
-eval "\$(minikube docker-env)"
+timeout 240 sudo minikube tunnel >/dev/null &
 kapp deploy -f \$CF_RENDERED -a cf -y
 EOT
 
